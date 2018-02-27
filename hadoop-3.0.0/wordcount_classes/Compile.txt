@@ -1,0 +1,1 @@
+javac -cp ".:/home/alexycruz1/Documents/Concurrencia/hadoop-3.0.0/wordcount_classes/apache-commons.jar:/home/alexycruz1/Documents/Concurrencia/hadoop-3.0.0/wordcount_classes/hadoop-core-1.1.2.jar:${HADOOP_HOME}/hadoop:${HADOOP_VERSION}:core.jar" -d wordcount_classes WordCount.java
