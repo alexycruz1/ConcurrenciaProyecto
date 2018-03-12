@@ -29,13 +29,15 @@
 ##
 ## {YARN_xyz|HDFS_xyz} > HADOOP_xyz > hard-coded defaults
 ##
-	CONGIF_DIR=/home/alexycruz1/Documents/Concurrencia/hadoop-3.0.0/bin/
 
 # Many of the options here are built from the perspective that users
 # may want to provide OVERWRITING values on the command line.
 # For example:
-#
-  JAVA_HOME=/usr/lib/jvm/java-9-oracle
+  
+  export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
+  export PATH=${JAVA_HOME}/bin:${PATH}
+  export HADOOP_CLASSPATH=${JAVA_HOME}/lib/tools.jar
+
 #
 # Therefore, the vast majority (BUT NOT ALL!) of these defaults
 # are configured for substitution and not append.  If append
@@ -52,11 +54,11 @@
 
 # The java implementation to use. By default, this environment
 # variable is REQUIRED on ALL platforms except OS X!
- export JAVA_HOME=/usr/lib/jvm/java-9-oracle
+# export JAVA_HOME=
 
 # Location of Hadoop.  By default, Hadoop will attempt to determine
 # this location based upon its execution path.
- #export HADOOP_HOME=/home/hduser/hadoop
+# export HADOOP_HOME=
 
 # Location of Hadoop's configuration information.  i.e., where this
 # file is living. If this is not defined, Hadoop will attempt to
@@ -66,11 +68,7 @@
 # /etc/profile.d or equivalent.  Some options (such as
 # --config) may react strangely otherwise.
 #
- #export HADOOP_CONF_DIR=${HADOOP_HOME}/etc/hadoop
-
-# -- HADOOP ENVIRONMENT VARIABLES START -- #
-
-# -- HADOOP ENVIRONMENT VARIABLES END -- # 
+# export HADOOP_CONF_DIR=${HADOOP_HOME}/etc/hadoop
 
 # The maximum amount of heap to use (Java -Xmx).  If no unit
 # is provided, it will be converted to MB.  Daemons will
