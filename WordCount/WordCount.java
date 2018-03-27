@@ -1,62 +1,77 @@
-	import java.io.*;
-	import java.util.*;
+import java.io.*;
+import java.util.*;
 	
-	import org.apache.hadoop.fs.Path;
-	import org.apache.hadoop.filecache.DistributedCache;
-	import org.apache.hadoop.conf.*;
-	import org.apache.hadoop.io.*;
-	import org.apache.hadoop.mapred.*;
-	import org.apache.hadoop.util.*;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.filecache.DistributedCache;
+import org.apache.hadoop.conf.*;
+import org.apache.hadoop.io.*;
+import org.apache.hadoop.mapred.*;
+import org.apache.hadoop.util.*;
 	
-	public class WordCount extends Configured implements Tool {
+public class WordCount extends Configured implements Tool {
 	
-	   public static class Map extends MapReduceBase implements Mapper<LongWritable, Text, Text, IntWritable> {
+	public static class Map extends MapReduceBase implements Mapper<LongWritable, Text, Text, IntWritable> {
 	
-	     static enum Counters { INPUT_WORDS }
+	  static enum Counters { INPUT_WORDS }
 	
-	     private final static IntWritable one = new IntWritable(1);
-	     private Text word = new Text();
+	    private final static IntWritable one = new IntWritable(1);
+	    private Text word = new Text();
 	
-	     private boolean caseSensitive = true;
-	     private Set<String> patternsToSkip = new HashSet<String>();
+	    private boolean caseSensitive = true;
+	    private Set<String> patternsToSkip = new HashSet<String>();
 	
-	     private long numRecords = 0;
-	     private String inputFile;
+	    private long numRecords = 0;
+	    private String inputFile;
 	
-	     public void configure(JobConf job) {
-	       caseSensitive = job.getBoolean("wordcount.case.sensitive", true);
-	       inputFile = job.get("map.input.file");
+	    public void configure(JobConf job) {
+	      caseSensitive = job.getBoolean("wordcount.case.sensitive", true);
+	      inputFile = job.get("map.input.file");
 	
-	       if (job.getBoolean("wordcount.skip.patterns", false)) {
-	         Path[] patternsFiles = new Path[0];
-	         try {
-	           patternsFiles = DistributedCache.getLocalCacheFiles(job);
-	         } catch (IOException ioe) {
-	           System.err.println("Caught exception while getting cached files: " + StringUtils.stringifyException(ioe));
-	         }
-	         for (Path patternsFile : patternsFiles) {
-	           parseSkipFile(patternsFile);
-	         }
-	       }
-	     }
+	      if (job.getBoolean("wordcount.skip.patterns", false)) {
+	        Path[] patternsFiles = new Path[0];
+	        try {
+	          patternsFiles = DistributedCache.getLocalCacheFiles(job);
+	        } catch (IOException ioe) {
+	          System.err.println("Caught exception while getting cached files: " + StringUtils.stringifyException(ioe));
+	        }
+	        for (Path patternsFile : patternsFiles) {
+	          parseSkipFile(patternsFile);
+	        }
+	      }
+	    }
 	
-	     private void parseSkipFile(Path patternsFile) {
-	       try {
-	         BufferedReader fis = new BufferedReader(new FileReader(patternsFile.toString()));
-	         String pattern = null;
-	         while ((pattern = fis.readLine()) != null) {
-	           patternsToSkip.add(pattern);
-	         }
-	       } catch (IOException ioe) {
-	         System.err.println("Caught exception while parsing the cached file '" + patternsFile + "' : " + StringUtils.stringifyException(ioe));
-	       }
-	     }
+	    private void parseSkipFile(Path patternsFile) {
+	      try {
+	        BufferedReader fis = new BufferedReader(new FileReader(patternsFile.toString()));
+	        String pattern = null;
+	        while ((pattern = fis.readLine()) != null) {
+	          patternsToSkip.add(pattern);
+	        }
+	      } catch (IOException ioe) {
+	        System.err.println("Caught exception while parsing the cached file '" + patternsFile + "' : " + StringUtils.stringifyException(ioe));
+	      }
+	    }
+
+			public String min(String a, String b){
+
+				return a.compareTo(b) > 0? b: a;
+			}
+
+			public String max(String a, String b){
+
+				return a.compareTo(b) > 0?a: b;
+			}
+
+			public String middleTerm(String a, String b, String c){
+				return a.compareTo(b) > 0 ? (a.compareTo(c) < 0 ? a : b.compareTo(c) > 0 ? b : c) : (a.compareTo(c) > 0 ? a : (b.compareTo(c) < 0 ? b: c));
+			}
 	
-	     public void map(LongWritable key, Text value, OutputCollector<Text, IntWritable> output, Reporter reporter) throws IOException {
-	       	String line = (caseSensitive) ? value.toString() : value.toString().toLowerCase();
-					String[] wordPatterns = {"is", "of", "on", "in", "to", "an", "with", "without", 
+	    public void map(LongWritable key, Text value, OutputCollector<Text, IntWritable> output, Reporter reporter) throws IOException {
+	      String line = (caseSensitive) ? value.toString() : value.toString().toLowerCase();
+				String[] wordPatterns = {"is", "of", "on", "in", "to", "an", "with", "without", 
 					"we", "they", "how", "what", "when", "it", "who", "ok", "okay", "do", "does",
-					"can", "cant", "dont", "doesnt", "want", "need", "from", "that", "these", "this"};
+					"can", "cant", "dont", "doesnt", "want", "need", "from", "that", "these", "this", 
+					"or", "for", "the", "and", "it"};
 
 					 for(int i = 33; i < 256; i++){
 						 	if((i > 64 && i < 91) || (i > 96 && i < 123)){
@@ -76,7 +91,7 @@
 							 	line = line.replaceAll(newPattern, "");
 							 }
 
-							 for(int j = 0; j < wordPatterns.length - 1; j++){ 
+							 /*for(int j = 0; j < wordPatterns.length; j++){ 
 								 int posicionPalabra = 0;
 								 boolean replaceWord = true;
 
@@ -109,41 +124,55 @@
 										 System.out.println("La linea es: " + line);
 									 }
 								 }
-							 }
+							 }*/
 					 }
 
-	       StringTokenizer tokenizer = new StringTokenizer(line);
-				 String tempToken = "";
-	       while (tokenizer.hasMoreTokens()) {
-					 String nextToken = tokenizer.nextToken();
-					 
-					 //primera palabra
-	         word.set(nextToken);
-	         output.collect(word, one);
-	         reporter.incrCounter(Counters.INPUT_WORDS, 1);
+					String[] lineWords = line.split("\\s");
+					String firstWord = "";
+					String secondWord = "";
+					String thirdWord = "";
+					for(int i = 0; i < lineWords.length; i++){
+						firstWord = lineWords[i];
 
-					 if(tokenizer.hasMoreTokens()){
-							tempToken = nextToken;
-						 	nextToken = tokenizer.nextToken();
+						word.set(firstWord);
+	         	output.collect(word, one);
+	         	reporter.incrCounter(Counters.INPUT_WORDS, 1);
+						for(int j = i + 1; j < lineWords.length; j++){
+								secondWord = lineWords[j];
+								//two words
+								if(firstWord.equals(secondWord)){
+									continue;
+								}
 
-							//dos palabras
-					 		word.set(tempToken + " " + nextToken);
-					 		output.collect(word, one);
-						 	reporter.incrCounter(Counters.INPUT_WORDS, 1);
+								String keyWord = firstWord + " " + secondWord;
+								String inverseKey = secondWord + " " + firstWord;
+								if(firstWord.compareTo(secondWord) > 0){
+									keyWord = inverseKey;
+								}
 
-							if(tokenizer.hasMoreTokens()){
-								String tempToken2 = tempToken;
-								tempToken = nextToken;
-								nextToken = tokenizer.nextToken();
+								word.set(keyWord);
+	         			output.collect(word, one);
+	         			reporter.incrCounter(Counters.INPUT_WORDS, 1);
 
-								//tres palabras
-								word.set(tempToken2 + " " + tempToken + " " + nextToken);
-					 			output.collect(word, one);
-						 		reporter.incrCounter(Counters.INPUT_WORDS, 1);
-							}
-					 }
-	       }
-	
+								for(int k = j + 1; k < lineWords.length; k++){
+							 		//three words
+									thirdWord = lineWords[k];
+
+									if(firstWord.equals(thirdWord) || secondWord.equals(thirdWord) || firstWord.equals(secondWord)){
+										continue;
+									}
+									
+									String first = min(min(firstWord, secondWord), thirdWord);
+									String last = max(max(firstWord, secondWord), thirdWord);
+									String middle = middleTerm(firstWord, secondWord, thirdWord);
+
+									keyWord = first + " " + middle + " " + last;
+									word.set(keyWord);
+	         				output.collect(word, one);
+	         				reporter.incrCounter(Counters.INPUT_WORDS, 1);
+							}		
+						}
+					}
 	       if ((++numRecords % 100) == 0) {
 	         reporter.setStatus("Finished processing " + numRecords + " records " + "from the input file: " + inputFile);
 	       }
@@ -156,6 +185,34 @@
 	       while (values.hasNext()) {
 	         sum += values.next().get();
 	       }
+					boolean writeKey = true;
+
+					for(int j = 0; j < mostRepeatedWords.length; j++){
+						if(mostRepeatedWords[j].equals(key)){
+							writeKey = false;
+							break;
+						}
+					}
+
+					if(writeKey){
+
+					
+
+					for(int i = mostRepeatedValues.length - 1; i >= 0; i--){
+						if(sum > mostRepeatedValues[i] && writeKey){
+							if(i < mostRepeatedValues.length - 1){
+								mostRepeatedValues[i + 1] = mostRepeatedValues[i];
+								mostRepeatedWords[i + 1] = mostRepeatedWords[i];
+								mostRepeatedValues[i] = 0;
+								mostRepeatedWords[i] = "";
+							}
+							mostRepeatedValues[i] = sum;
+							mostRepeatedWords[i] = key.toString();
+						}
+					}
+
+					}
+
 	       output.collect(key, new IntWritable(sum));
 	     }
 	   }
@@ -193,6 +250,12 @@
 	
 	   public static void main(String[] args) throws Exception {
 	     int res = ToolRunner.run(new Configuration(), new WordCount(), args);
-	     System.exit(res);
+
+				System.out.println("LA PALABRA MAS REPETIDA ES: " + mostRepeatedWords[3] + " :\t" + mostRepeatedValues[3]);
+	     
+			 	System.exit(res);
 	   }
+
+		 static String[] mostRepeatedWords = {"", "", "", "", ""};
+		 static int[] mostRepeatedValues = {0,0,0,0,0};
 	}
