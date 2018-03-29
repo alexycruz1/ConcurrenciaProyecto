@@ -90,42 +90,24 @@ public class WordCount extends Configured implements Tool {
 
 							 	line = line.replaceAll(newPattern, "");
 							 }
-
-							 /*for(int j = 0; j < wordPatterns.length; j++){ 
-								 int posicionPalabra = 0;
-								 boolean replaceWord = true;
-
-								 if(line.indexOf(wordPatterns[j]) != -1){
-									 posicionPalabra = line.indexOf(wordPatterns[j]);
-
-									 for(int k = 0; k < wordPatterns[j].length(); k++){
-										 System.out.println("Primera palabra: " + wordPatterns[j].charAt(k));
-										 System.out.println("Segunda palabra: " + line.charAt(posicionPalabra + k));
-										 System.out.println();
-										 if(wordPatterns[j].charAt(k) != line.charAt(posicionPalabra + k)){
-											 replaceWord = false;
-
-											 System.out.println("Entre al falso");
-											 System.out.println("Primera palabra: " + wordPatterns[j].charAt(k));
-										 	 System.out.println("Segunda palabra: " + line.charAt(posicionPalabra + k));
-										 	 System.out.println();
-										 }
-									 }
-
-									 //revisar que la palabra no tenga nada antes y nada despues
-									 //puede estar al inicio como "is ";
-									 //al final como " on";
-									 //o en medio como " of ";
-
-									 if(replaceWord){
-										 System.out.println();
-										 System.out.println("Entre a reemplazar: " + wordPatterns[j]);
-										 line = line.replaceAll(wordPatterns[j], "PEREZA");
-										 System.out.println("La linea es: " + line);
-									 }
-								 }
-							 }*/
 					 }
+
+					 for(int i = 0; i < wordPatterns.length; i++){
+						line = line.replaceAll(" " + wordPatterns[i] + " ", " ");
+					}
+
+					for(int i = 0; i < wordPatterns.length; i++){
+						String tempStringBeg = line.substring(0, wordPatterns[i].length());
+						String tempStringEnd = line.substring(line.length() - wordPatterns[i].length(), line.length());
+
+						if(tempStringBeg.equals(wordPatterns[i])){
+							line = line.substring(wordPatterns[i].length() + 1, line.length());
+						}
+
+						if(tempStringEnd.equals(wordPatterns[i])){
+							line = line.substring(0, line.length() - wordPatterns[i].length() - 1);
+						}
+					}
 
 					String[] lineWords = line.split("\\s");
 					String firstWord = "";
