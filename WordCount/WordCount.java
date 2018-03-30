@@ -34,7 +34,8 @@ public class WordCount extends Configured implements Tool {
 				try {
 					patternsFiles = DistributedCache.getLocalCacheFiles(job);
 				} catch (IOException ioe) {
-					System.err.println("Caught exception while getting cached files: " + StringUtils.stringifyException(ioe));
+					System.err.println(
+							"Caught exception while getting cached files: " + StringUtils.stringifyException(ioe));
 				}
 				for (Path patternsFile : patternsFiles) {
 					parseSkipFile(patternsFile);
@@ -73,9 +74,9 @@ public class WordCount extends Configured implements Tool {
 		public void map(LongWritable key, Text value, OutputCollector<Text, IntWritable> output, Reporter reporter)
 				throws IOException {
 			String line = (caseSensitive) ? value.toString() : value.toString().toLowerCase();
-			String[] wordPatterns = { "is", "of", "on", "in", "to", "an", "with", "without", "we", "they", "how", "what",
-					"when", "it", "who", "ok", "okay", "do", "does", "can", "cant", "dont", "doesnt", "want", "need", "from",
-					"that", "these", "this", "or", "for", "the", "and", "it" };
+			String[] wordPatterns = { "is", "of", "on", "in", "to", "an", "with", "without", "we", "they", "how",
+					"what", "when", "it", "who", "ok", "okay", "do", "does", "can", "cant", "dont", "doesnt", "want",
+					"need", "from", "that", "these", "this", "or", "for", "the", "and", "it" };
 
 			for (int i = 33; i < 256; i++) {
 				if ((i > 64 && i < 91) || (i > 96 && i < 123)) {
@@ -100,20 +101,59 @@ public class WordCount extends Configured implements Tool {
 				line = line.replaceAll(" " + wordPatterns[i] + " ", " ");
 			}
 
+			String[] lineWordsTemp = line.split("\\s");
+			int deleted = 0;
+
 			for (int i = 0; i < wordPatterns.length; i++) {
-				String tempStringBeg = line.substring(0, wordPatterns[i].length());
-				String tempStringEnd = line.substring(line.length() - wordPatterns[i].length(), line.length());
+				for (int j = 0; j < lineWordsTemp.length; j++) {
+					if (wordPatterns[i].equals(lineWordsTemp[j])) {
+						lineWordsTemp[j] = " ";
+						deleted++;
+					}
 
-				if (tempStringBeg.equals(wordPatterns[i])) {
-					line = line.substring(wordPatterns[i].length() + 1, line.length());
-				}
+					for (int k = 33; k < 256; k++) {
+						if ((k > 64 && k < 91) || (k > 96 && k < 123)) {
+							char newChar = (char) k;
+							String newPattern = "" + newChar;
 
-				if (tempStringEnd.equals(wordPatterns[i])) {
-					line = line.substring(0, line.length() - wordPatterns[i].length() - 1);
+							if (newPattern.equals(lineWordsTemp[j])) {
+								lineWordsTemp[j] = " ";
+								deleted++;
+							}
+
+						} else if (k > 47 && k < 58) {
+							char newChar = (char) k;
+							String newPattern = "" + newChar;
+
+							if (newPattern.equals(lineWordsTemp[j])) {
+								lineWordsTemp[j] = " ";
+								deleted++;
+							}
+
+						} else {
+							char newChar = (char) k;
+							String newPattern = "\\" + newChar;
+
+							if (newPattern.equals(lineWordsTemp[j])) {
+								lineWordsTemp[j] = " ";
+								deleted++;
+							}
+
+						}
+					}
 				}
 			}
 
-			String[] lineWords = line.split("\\s");
+			String[] lineWords = new String[lineWordsTemp.length - deleted];
+			int indexLineWords = 0;
+
+			for (int i = 0; i < lineWordsTemp.length; i++) {
+				if (!lineWordsTemp[i].equals(" ")) {
+					lineWords[indexLineWords] = lineWordsTemp[i];
+					indexLineWords++;
+				}
+			}
+
 			String firstWord = "";
 			String secondWord = "";
 			String thirdWord = "";
@@ -145,7 +185,8 @@ public class WordCount extends Configured implements Tool {
 						//three words
 						thirdWord = lineWords[k];
 
-						if (firstWord.equals(thirdWord) || secondWord.equals(thirdWord) || firstWord.equals(secondWord)) {
+						if (firstWord.equals(thirdWord) || secondWord.equals(thirdWord)
+								|| firstWord.equals(secondWord)) {
 							continue;
 						}
 
@@ -160,9 +201,10 @@ public class WordCount extends Configured implements Tool {
 					}
 				}
 			}
-			
+
 			if ((++numRecords % 100) == 0) {
-				reporter.setStatus("Finished processing " + numRecords + " records " + "from the input file: " + inputFile);
+				reporter.setStatus(
+						"Finished processing " + numRecords + " records " + "from the input file: " + inputFile);
 			}
 		}
 	}
@@ -170,6 +212,7 @@ public class WordCount extends Configured implements Tool {
 	public static class Reduce extends MapReduceBase implements Reducer<Text, IntWritable, Text, IntWritable> {
 		public void reduce(Text key, Iterator<IntWritable> values, OutputCollector<Text, IntWritable> output,
 				Reporter reporter) throws IOException {
+
 			int sum = 0;
 			while (values.hasNext()) {
 				sum += values.next().get();
