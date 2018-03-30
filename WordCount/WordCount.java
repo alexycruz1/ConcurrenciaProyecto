@@ -160,6 +160,7 @@ public class WordCount extends Configured implements Tool {
 					}
 				}
 			}
+			
 			if ((++numRecords % 100) == 0) {
 				reporter.setStatus("Finished processing " + numRecords + " records " + "from the input file: " + inputFile);
 			}
