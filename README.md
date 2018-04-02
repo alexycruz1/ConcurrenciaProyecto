@@ -72,5 +72,5 @@ Cada grupo deberá realizar una pequeña presentación (15 – 20 mins) mostrand
 * Hallazgos interesantes
 
 # Entregables
-* [Informe de proyecto - DOC]()
-* [Presentacion de proyecto]()
+* [Informe de proyecto - DOC](https://docs.google.com/document/d/1lgq_ObL51zpmHhoominEO6Ljw7qjA0sKGqPMGFCLj7M/edit?usp=sharing)
+* [Presentacion de proyecto](https://docs.google.com/presentation/d/1RRZpkkh7H9r2KslI_JRHVeSuOli5J1a5MqnLuI9skGE/edit?usp=sharing)
